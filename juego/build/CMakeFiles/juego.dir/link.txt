@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/juego.dir/src/main.cpp.o CMakeFiles/juego.dir/src/board.cpp.o -o juego

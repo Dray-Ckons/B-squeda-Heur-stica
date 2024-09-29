@@ -1,0 +1,3 @@
+/mnt/f/gato/Busqueda-heuristica/juego/build/CMakeFiles/juego.dir
+/mnt/f/gato/Busqueda-heuristica/juego/build/CMakeFiles/edit_cache.dir
+/mnt/f/gato/Busqueda-heuristica/juego/build/CMakeFiles/rebuild_cache.dir
