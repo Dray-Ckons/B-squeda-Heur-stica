@@ -20,7 +20,7 @@ class Board
     int piecesLimit = 6;
     int phase = 0; // 0 = fase de ubicar fichas, 1 = fase de mover fichas
 
-    bool isLegalMove(int position) const;  // Verificar si la posición es legal
+    bool isLegalMove(int position);  // Verificar si la posición es legal
     bool checkXWin(uint16_t board);  //
     bool checkOWin(uint16_t board);  //
 
@@ -30,7 +30,7 @@ class Board
         ~Board();  // Destructor prototype
 
         int evaluate(int depth);  // Función de evaluación
-        std::vector<int> generateAllLegalMoves() const;
+        std::vector<int> generateAllLegalMoves();
 
         uint16_t getXBoard() const;
         uint16_t getOBoard() const;
@@ -38,7 +38,13 @@ class Board
 
         void print() const;  // Función para imprimir el tablero en una forma legible
         //bool makeMove(int position);
-        bool makeMove(int position,std::optional<int> toPosition);  // Función para hacer una jugada
+        std::vector<int> returnPossibleMoves();
+        std::vector<int> returnPiecePositions();
+        std::vector<int> returnMoves(int fromPosition);
+
+        bool makeMove(int position,int toPosition);  // Función para hacer una jugada
+        bool removePiece(int position);// Funcion para remover pieza
+        bool movePiece(int from, int to);
 
         bool hasXAlign() const; // Verificar si X ha alineado 3 fichas
         bool haxOAlign() const; // Verificar si O ha alineadi 3 fichas
@@ -64,6 +70,7 @@ struct BoardHash
         return h1 ^ (h2 << 1) ^ (h2 >> 1) ^ (h3 << 2) ^ (h3 >> 2);
     }
 };
+
 
 
 #endif //BOARD_HPP

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <optional>
 #include "board.hpp"
+#include <cstdlib>
 
 Board::Board()
 {
@@ -34,17 +35,19 @@ int Board::evaluate(const int depth)
     return 0;
 }
 
-std::vector<int> Board::generateAllLegalMoves() const
+std::vector<int> Board::generateAllLegalMoves()
 {
     std::vector<int> legalMoves;
     if(phase==0){
         for (int i = 0; i < 16; i++){
-            if (isLegalMove(i,0))
+            if (isLegalMove(i)){
                 legalMoves.push_back(i);
+            }
         }
     }
     else if(phase==1){
-        for(int move : returnPossiblePositions()){
+        //std::cout<<turn<<std::endl;
+        for(int move : returnPossibleMoves()){
             if(isLegalMove(move)){
                 legalMoves.push_back(move);
             }
@@ -61,24 +64,19 @@ std::vector<int> Board::generateAllLegalMoves() const
     return legalMoves;
 }
 
-bool Board::isLegalMove(const int fromPosition, std::optional<int> toPosition) const
+bool Board::isLegalMove(int fromPosition)
 {
     if (fromPosition < 0 || fromPosition > 16)  // posicion dentro del rango?
             return false;
-    if(phase==0){
+    
         if ((board[X] | board[O]) & (oneMask << fromPosition))  // posicion es vacia?
             return false;
         return true;
-    }
-    /*else if(phase==1){
-        if(turn==X && (board[X]&&(oneMask<<fromPosition))){
-
-        }
-    }*/
-    return 0;
+    
+    return false;
 }
 
-std::vector<int> returnPossiblePositions(){
+std::vector<int> Board::returnPossibleMoves(){
     std::vector<int> currentPieces;
     for(int i = 0; i<16;i++){
         if((board[turn]&(oneMask<<i))){
@@ -93,14 +91,23 @@ std::vector<int> returnPossiblePositions(){
     }
     return moves;
 }
+std::vector<int> Board::returnPiecePositions(){
+    std::vector<int> currentPieces;
+    for(int i = 0; i<16;i++){
+        if((board[turn]&(oneMask<<i))){
+            currentPieces.push_back(i);
+        }
+    }
+    return currentPieces;
+}
 
-std::vector<int> returnMoves(int fromPositions){
+std::vector<int> Board::returnMoves(int fromPosition){
     std::vector<int> moves;
     if(fromPosition==0){
         moves.push_back(1);
         moves.push_back(6);
     }
-    else if(fromPositon==1){
+    else if(fromPosition==1){
         moves.push_back(0);
         moves.push_back(2);
         moves.push_back(4);
@@ -113,7 +120,7 @@ std::vector<int> returnMoves(int fromPositions){
         moves.push_back(4);
         moves.push_back(7);
     }
-    else if(fromPositon==4){
+    else if(fromPosition==4){
         moves.push_back(1);
         moves.push_back(3);
         moves.push_back(5);
@@ -122,7 +129,7 @@ std::vector<int> returnMoves(int fromPositions){
         moves.push_back(4);
         moves.push_back(8);
     }
-    else if(fromPositon==6){
+    else if(fromPosition==6){
         moves.push_back(0);
         moves.push_back(7);
         moves.push_back(13);
@@ -171,10 +178,21 @@ std::vector<int> returnMoves(int fromPositions){
     return moves;
 }
 
+bool Board::removePiece(int position){
+    board[turn] &= ~(oneMask<<position);
+    return 0;
+}
 
-bool Board::makeMove(const int fromPosition, std::optional<int> toPosition)
+bool Board::movePiece(int from, int to){
+    board[turn] &= ~(oneMask<<from);
+    board[turn] |= (oneMask<<to);
+    return 0;
+}
+
+bool Board::makeMove(const int fromPosition, int toPosition)
 {
-    if(phase==0 && xPieces==6 && oPieces==6){
+    if(phase==0 && xPieces==3 && oPieces==3){
+        std::cout<<"fase 1"<<std::endl;
         phase=1;
     }
     if (phase==0){
@@ -186,7 +204,27 @@ bool Board::makeMove(const int fromPosition, std::optional<int> toPosition)
         }
     }
     else if(phase==1){
+        std::vector<int> legalMoves;
+        std::vector<int> destinations;
+        for(int from : returnPiecePositions()){
+            for(int to : returnMoves(toPosition)){
+                if(from==to){
+                    std::cout<<from<<"/"<<toPosition<<std::endl;
+                    std::cout<<turn<<std::endl;
+                    movePiece(from, toPosition);
+                    turn = 1-turn == 0 ? X : O;
+                    return true;
+                }
+            }
+        }
 
+        /*if (isLegalMove(toPosition)) {
+            std::vector<int>positions = returnMoves(toPosition);
+            removePiece(positions[std::rand()%(positions.size())]);
+            board[turn] |= (oneMask << toPosition);
+            turn = 1-turn == 0 ? X : O;
+            return true;
+        }*/
     }
     return false;
 }
@@ -199,12 +237,12 @@ bool Board::checkXWin(uint16_t board)
     uint16_t winningBoards[8] = {
         0b1110000000000000,  // fila 1
         0b0001110000000000,  // fila 2
-        // fila 3 es de 2 por un lado y 2 por el otro (no hay conexión)
+                            // fila 3 es de 2 por un lado y 2 por el otro (no hay conexión)
         0b0000000000111000,  // fila 4
         0b0000000000000111,  // fila 5
         0b1000001000000100,  // columna 1 (exterior)
         0b0001000100100000,  // columna 2 (interior)
-        // columna 3 es de 2 por arriba y 2 por abajo (no hay conexión)
+                            // columna 3 es de 2 por arriba y 2 por abajo (no hay conexión)
         0b0000010010001000,  // columna 4 (interior)
         0b0010000001000001,  // columna 5 (exterior)
     };
