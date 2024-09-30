@@ -39,13 +39,14 @@ class Board
         void print() const;  // Función para imprimir el tablero en una forma legible
         //bool makeMove(int position);
         std::vector<int> returnPossibleMoves();
-        std::vector<int> returnPiecePositions();
+        std::vector<int> returnPiecePositions(MARK turn);
         std::vector<int> returnMoves(int fromPosition);
 
         bool makeMove(int position,int toPosition);  // Función para hacer una jugada
-        bool removePiece(int position);// Funcion para remover pieza
+        bool removePiece(int position, MARK turn);// Funcion para remover pieza
         bool movePiece(int from, int to);
 
+        bool checkTriple(uint16_t board);
         bool hasXAlign() const; // Verificar si X ha alineado 3 fichas
         bool haxOAlign() const; // Verificar si O ha alineadi 3 fichas
         bool hasXWon() ;  // Verificar si X ha ganado

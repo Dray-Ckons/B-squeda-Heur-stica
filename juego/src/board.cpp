@@ -91,7 +91,7 @@ std::vector<int> Board::returnPossibleMoves(){
     }
     return moves;
 }
-std::vector<int> Board::returnPiecePositions(){
+std::vector<int> Board::returnPiecePositions(MARK turn){
     std::vector<int> currentPieces;
     for(int i = 0; i<16;i++){
         if((board[turn]&(oneMask<<i))){
@@ -178,8 +178,9 @@ std::vector<int> Board::returnMoves(int fromPosition){
     return moves;
 }
 
-bool Board::removePiece(int position){
+bool Board::removePiece(int position, MARK turn){
     board[turn] &= ~(oneMask<<position);
+    if(turn==X){xPieces--;}else{oPieces--;}
     return 0;
 }
 
@@ -191,7 +192,7 @@ bool Board::movePiece(int from, int to){
 
 bool Board::makeMove(const int fromPosition, int toPosition)
 {
-    if(phase==0 && xPieces==3 && oPieces==3){
+    if(phase==0 && xPieces==piecesLimit && oPieces==piecesLimit){
         std::cout<<"fase 1"<<std::endl;
         phase=1;
     }
@@ -200,32 +201,58 @@ bool Board::makeMove(const int fromPosition, int toPosition)
         board[turn] |= (oneMask << fromPosition);
         if(turn==X){xPieces++;}else{oPieces++;}
         turn = 1-turn == 0 ? X : O;  // cambio de turno
+        /*if(checkTriple(board[turn])){
+            MARK oppo;
+            if(turn==X){oppo=X;}else{oppo=O;}
+            std::vector<int> pieces = returnPiecePositions(oppo);
+            removePiece(pieces[std::rand()%pieces.size()], oppo);
+            //std::cout<<"una pieza de "<<oppo<<" a sido removida"<<std::endl;
+        }*/
         return true;
         }
     }
     else if(phase==1){
         std::vector<int> legalMoves;
         std::vector<int> destinations;
-        for(int from : returnPiecePositions()){
+        for(int from : returnPiecePositions(turn)){
             for(int to : returnMoves(toPosition)){
                 if(from==to){
                     std::cout<<from<<"/"<<toPosition<<std::endl;
                     std::cout<<turn<<std::endl;
                     movePiece(from, toPosition);
+                    /*if(checkTriple(board[turn])){
+                        MARK oppo;
+                        if(turn==X){oppo=X;}else{oppo=O;}
+                        std::vector<int> pieces = returnPiecePositions(oppo);
+                        removePiece(pieces[std::rand()%pieces.size()], oppo);
+                        //std::cout<<"una pieza de "<<oppo<<" a sido removida"<<std::endl;
+                    }*/
                     turn = 1-turn == 0 ? X : O;
                     return true;
                 }
             }
         }
-
-        /*if (isLegalMove(toPosition)) {
-            std::vector<int>positions = returnMoves(toPosition);
-            removePiece(positions[std::rand()%(positions.size())]);
-            board[turn] |= (oneMask << toPosition);
-            turn = 1-turn == 0 ? X : O;
-            return true;
-        }*/
     }
+    return false;
+}
+
+
+
+bool Board::checkTriple(uint16_t board){
+    uint16_t winningBoards[8] = {
+        0b0000000000000111,  // fila 1
+        0b0000000000111000,  // fila 2
+        // fila 3 es de 2 por un lado y 2 por el otro (no hay conexión)
+        0b0001110000000000,  // fila 4
+        0b1110000000000000,  // fila 5
+        0b0010000001000001,  // columna 1 (exterior)
+        0b0000010010001000,  // columna 2 (interior)
+        // columna 3 es de 2 por arriba y 2 por abajo (no hay conexión)
+        0b0001000100100000,  // columna 4 (interior)
+        0b1000001000000100,  // columna 5 (exterior)
+    };
+    for (uint16_t wp : winningBoards)
+        if ((board & wp) == wp) return true;
     return false;
 }
 
@@ -234,21 +261,7 @@ bool Board::checkXWin(uint16_t board)
     /*if(phase==1 && oPieces<3)
         return true;
     return false;*/
-    uint16_t winningBoards[8] = {
-        0b1110000000000000,  // fila 1
-        0b0001110000000000,  // fila 2
-                            // fila 3 es de 2 por un lado y 2 por el otro (no hay conexión)
-        0b0000000000111000,  // fila 4
-        0b0000000000000111,  // fila 5
-        0b1000001000000100,  // columna 1 (exterior)
-        0b0001000100100000,  // columna 2 (interior)
-                            // columna 3 es de 2 por arriba y 2 por abajo (no hay conexión)
-        0b0000010010001000,  // columna 4 (interior)
-        0b0010000001000001,  // columna 5 (exterior)
-    };
-    for (uint16_t wp : winningBoards)
-        if ((board & wp) == wp) return true;
-    return false;
+    return checkTriple(board);
 }
 
 bool Board::checkOWin(uint16_t board)
@@ -256,21 +269,8 @@ bool Board::checkOWin(uint16_t board)
     /*if(phase==1 && xPieces<3)
         return true;
     return false;*/
-    uint16_t winningBoards[8] = {
-        0b1110000000000000,  // fila 1
-        0b0001110000000000,  // fila 2
-        // fila 3 es de 2 por un lado y 2 por el otro (no hay conexión)
-        0b0000000000111000,  // fila 4
-        0b0000000000000111,  // fila 5
-        0b1000001000000100,  // columna 1 (exterior)
-        0b0001000100100000,  // columna 2 (interior)
-        // columna 3 es de 2 por arriba y 2 por abajo (no hay conexión)
-        0b0000010010001000,  // columna 4 (interior)
-        0b0010000001000001,  // columna 5 (exterior)
-    };
-    for (uint16_t wp : winningBoards)
-        if ((board & wp) == wp) return true;
-    return false;
+
+    return checkTriple(board);
 }
 
 bool Board::hasXWon() { return checkXWin(board[X]); }
